@@ -1,7 +1,5 @@
 // SQL queries
-export const GET_All_USERS_DTO =
-  'select u.id, u.email, u.refreshtoken, u.isactivated, u.activationcode, r.name as role ' +
-  'from users as u left join roles as r on u.roleid=r.id ';
+export const GET_All_USERS_DTO = 'select * from alluserswithrolenames';
 
 // Errors
 export const ACCESS_DENIED = 'Access denied';
