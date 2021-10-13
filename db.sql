@@ -21,3 +21,22 @@ CREATE VIEW alluserswithrolenames AS
     select u.id, u.email, u.refreshtoken, u.isactivated, u.activationcode, r.name as role 
     from users as u 
     left join roles as r on u.roleid=r.id;
+
+--Functions
+create or replace function getroleidbyrolename(rolename varchar)
+  returns integer
+    as
+    $body$
+        select id from roles where name=rolename
+    $body$
+    language sql;
+
+--Procedures
+CREATE PROCEDURE insert_user(
+    _email varchar, _passwordhash varchar, _refreshtoken varchar, _roleid integer, 
+    _isactivated boolean, _activationcode varchar) 
+    LANGUAGE SQL 
+    AS $$
+    insert into users(email, passwordhash, refreshtoken, roleid, isactivated, activationcode) 
+    values(_email, _passwordhash, _refreshtoken, _roleid, _isactivated, _activationcode);
+    $$;
