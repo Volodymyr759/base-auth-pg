@@ -1,19 +1,27 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { genSalt, hash, compare } from 'bcryptjs';
 import { Roles } from '../infrastructure/enums/roles.enum';
 import {
-  ALREADY_REGISTERED_ERROR,
   CREATE_USER,
   GET_All_USERS_DTO,
   GET_ROLE_ID_BY_ROLE_NAME,
+  JWT_EXPIRATION_TIME,
   JWT_EXPIRATION_TIME_FOR_REFRESH,
+  NOT_FOUND_ERROR,
+  WRONG_PASSWORD_ERROR,
 } from '../infrastructure/app-constants';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserDto } from './dto/user.dto';
 import { Users } from './user.entity';
 import { UserRepository } from './users.repository';
+import { IUserProfile } from '../infrastructure/interfaces/user-profile.interface';
 
 @Injectable()
 export class AuthService {
@@ -24,10 +32,6 @@ export class AuthService {
   ) {}
 
   async create(userDto: CreateUserDto) {
-    const userFromDb = await this.find(userDto.login);
-    if (userFromDb) {
-      throw new BadRequestException(ALREADY_REGISTERED_ERROR);
-    }
     const refreshToken = await this.jwtService.signAsync(
       { email: userDto.login },
       { expiresIn: JWT_EXPIRATION_TIME_FOR_REFRESH },
@@ -42,7 +46,7 @@ export class AuthService {
     newUser.refreshtoken = refreshToken;
     newUser.roleid = parseInt(roles[0].getroleidbyrolename);
     newUser.isactivated = false;
-    newUser.activationcode = Math.floor(Math.random() * 10e-9).toString();
+    newUser.activationcode = makeRandomString(50);
 
     await this.userRepository.query(CREATE_USER, [
       newUser.email,
@@ -72,4 +76,48 @@ export class AuthService {
   async find(email: string) {
     return await this.userRepository.findOne({ email });
   }
+
+  async login(userDto: CreateUserDto) {
+    const userFromDb = await this.find(userDto.login);
+    if (!userFromDb) {
+      throw new HttpException(NOT_FOUND_ERROR, HttpStatus.NOT_FOUND);
+    }
+    const isPasswordCorrect = await compare(
+      userDto.password,
+      userFromDb.passwordhash,
+    );
+    if (!isPasswordCorrect) {
+      throw new HttpException(WRONG_PASSWORD_ERROR, HttpStatus.BAD_REQUEST);
+    }
+    const userProfile: IUserProfile = {
+      id: userFromDb.id,
+      role: 'user', //todo: select userFromDb.roles,
+      email: userFromDb.email,
+    };
+
+    const token = await this.jwtService.signAsync(userProfile, {
+      expiresIn: JWT_EXPIRATION_TIME,
+    });
+
+    return {
+      access_token: token,
+      expires_in: JWT_EXPIRATION_TIME,
+      token_type: 'bearer',
+      refresh_token: userFromDb.refreshtoken,
+      email: userFromDb.email,
+      role: userProfile.role,
+      userId: userFromDb.id,
+    };
+  }
+}
+
+function makeRandomString(length: number) {
+  let result = '';
+  const characters =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const charactersLength = characters.length;
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
 }

@@ -14,6 +14,7 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { AuthService } from '../auth/auth.service';
 import {
   ACCESS_DENIED,
@@ -55,6 +56,18 @@ export class AuthController {
     } catch (e) {
       throw new HttpException(e.message, e.HttpStatus);
     }
+  }
+
+  @Post('login')
+  @HttpCode(200)
+  @UsePipes(new ValidationPipe())
+  async login(
+    @Res({ passthrough: true }) response: Response,
+    @Body() userDto: CreateUserDto,
+  ) {
+    const jwtObject = await this.authService.login(userDto);
+    response.cookie('auth', JSON.stringify(jwtObject));
+    return jwtObject;
   }
 
   @Post('register')

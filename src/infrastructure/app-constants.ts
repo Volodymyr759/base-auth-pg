@@ -15,4 +15,3 @@ export const WRONG_PASSWORD_ERROR = 'Wrong password';
 // JWT-constants
 export const JWT_EXPIRATION_TIME = 1800;
 export const JWT_EXPIRATION_TIME_FOR_REFRESH = 1209600;
-export const JWT_SECRET = 'Awesdlk12312/*4';
