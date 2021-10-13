@@ -1,6 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 import { Length, IsEmail } from 'class-validator';
-import { Roles } from '../infrastructure/enums/roles.enum';
 
 @Entity()
 export class Users {
@@ -24,12 +23,8 @@ export class Users {
   })
   refreshtoken: string;
 
-  @Column({
-    type: 'enum',
-    enum: Roles,
-    default: Roles.User,
-  })
-  roleid: Roles;
+  @Column()
+  roleid: number;
 
   @Column()
   isactivated: boolean;

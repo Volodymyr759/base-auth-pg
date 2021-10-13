@@ -1,4 +1,19 @@
-import { Controller, Get, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpException,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  Res,
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { AuthService } from '../auth/auth.service';
 import {
   ACCESS_DENIED,
@@ -7,6 +22,7 @@ import {
   NOT_FOUND_ERROR,
   UNAUTHORIZED,
 } from '../infrastructure/app-constants';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UserDto } from './dto/user.dto';
 
 @Controller('auth')
@@ -14,6 +30,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Get()
+  @HttpCode(200)
   async getUsers(): Promise<UserDto[]> {
     try {
       const users = await this.authService.findAll();
@@ -27,7 +44,23 @@ export class AuthController {
   }
 
   @Get(':id')
-  getUserById() {
-    return 'UserDto by id';
+  @HttpCode(200)
+  async getUserById(@Param('id') id: string) {
+    try {
+      const user = await this.authService.findById(id);
+      if (!user) {
+        throw new HttpException(NOT_FOUND_ERROR, HttpStatus.NOT_FOUND);
+      }
+      return user;
+    } catch (e) {
+      throw new HttpException(e.message, e.HttpStatus);
+    }
+  }
+
+  @Post('register')
+  @HttpCode(201)
+  @UsePipes(new ValidationPipe())
+  async register(@Body() userDto: CreateUserDto) {
+    return await this.authService.create(userDto);
   }
 }
