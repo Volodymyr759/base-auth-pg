@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { genSalt, hash, compare } from 'bcryptjs';
-import { Roles } from 'src/infrastructure/enums/roles.enum';
+import { Roles } from '../infrastructure/enums/roles.enum';
 import {
   ALREADY_REGISTERED_ERROR,
   CREATE_USER,
