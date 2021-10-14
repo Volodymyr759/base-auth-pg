@@ -40,3 +40,10 @@ CREATE PROCEDURE insert_user(
     insert into users(email, passwordhash, refreshtoken, roleid, isactivated, activationcode) 
     values(_email, _passwordhash, _refreshtoken, _roleid, _isactivated, _activationcode);
     $$;
+
+CREATE PROCEDURE update_user_email(
+    _id integer, _email varchar) 
+    LANGUAGE SQL 
+    AS $$
+    update users set email=_email where id=_id;
+    $$;

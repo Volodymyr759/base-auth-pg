@@ -2,6 +2,7 @@
 export const GET_All_USERS_DTO = 'select * from alluserswithrolenames';
 export const GET_ROLE_ID_BY_ROLE_NAME = 'SELECT getroleidbyrolename($1)';
 export const CREATE_USER = 'CALL insert_user($1, $2, $3, $4, $5, $6)';
+export const UPDATE_USER_EMAIL = 'CALL update_user_email($1, $2)';
 // Errors
 export const ACCESS_DENIED = 'Access denied';
 export const BAD_REQUEST = 'Bad request';
