@@ -16,6 +16,7 @@ import {
   JWT_EXPIRATION_TIME_FOR_REFRESH,
   NOT_FOUND_ERROR,
   UPDATE_USER_EMAIL,
+  UPDATE_USER_PASSWORD_HASH,
   WRONG_PASSWORD_ERROR,
 } from '../infrastructure/app-constants';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -24,6 +25,7 @@ import { Users } from './user.entity';
 import { UserRepository } from './users.repository';
 import { IUserProfile } from '../infrastructure/interfaces/user-profile.interface';
 import { ChangeEmailDto } from './dto/change-email.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -49,6 +51,28 @@ export class AuthService {
     await this.userRepository.query(UPDATE_USER_EMAIL, [
       userFromDb.id,
       changeEmailDto.newEmail,
+    ]);
+  }
+
+  async changePassword(changePasswordDto: ChangePasswordDto) {
+    const userFromDb = await this.find(changePasswordDto.email);
+    if (!userFromDb) {
+      throw new Error();
+    }
+    const isPasswordCorrect = await compare(
+      changePasswordDto.oldPassword,
+      userFromDb.passwordhash,
+    );
+    if (!isPasswordCorrect) {
+      throw new Error();
+    }
+    userFromDb.passwordhash = await hash(
+      changePasswordDto.newPassword,
+      await genSalt(),
+    );
+    await this.userRepository.query(UPDATE_USER_PASSWORD_HASH, [
+      userFromDb.id,
+      userFromDb.passwordhash,
     ]);
   }
 

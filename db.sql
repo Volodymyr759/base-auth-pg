@@ -47,3 +47,9 @@ CREATE PROCEDURE update_user_email(
     AS $$
     update users set email=_email where id=_id;
     $$;
+CREATE PROCEDURE update_user_passwordhash(
+    _id integer, _passwordhash varchar) 
+    LANGUAGE SQL 
+    AS $$
+    update users set passwordhash=_passwordhash where id=_id;
+    $$;
