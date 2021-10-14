@@ -21,6 +21,7 @@ import {
   NOT_FOUND_ERROR,
 } from '../infrastructure/app-constants';
 import { ChangeEmailDto } from './dto/change-email.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserDto } from './dto/user.dto';
 
@@ -65,6 +66,18 @@ export class AuthController {
       return changeEmailDto.newEmail;
     } catch {
       throw new HttpException(NOT_FOUND_ERROR, HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @Post('change-password')
+  @HttpCode(200)
+  @UsePipes(new ValidationPipe())
+  async changePassword(@Body() changePasswordDto: ChangePasswordDto) {
+    try {
+      await this.authService.changePassword(changePasswordDto);
+      return changePasswordDto.newPassword;
+    } catch {
+      throw new HttpException(BAD_REQUEST, HttpStatus.BAD_REQUEST);
     }
   }
 
