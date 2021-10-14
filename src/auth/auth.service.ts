@@ -12,11 +12,14 @@ import {
   CREATE_USER,
   GET_All_USERS_DTO,
   GET_ROLE_ID_BY_ROLE_NAME,
+  GET_ROLE_NAME_BY_ROLE_ID,
   JWT_EXPIRATION_TIME,
   JWT_EXPIRATION_TIME_FOR_REFRESH,
+  JWT_SECRET,
   NOT_FOUND_ERROR,
   UPDATE_USER_EMAIL,
   UPDATE_USER_PASSWORD_HASH,
+  UPDATE_USER_REFRESH_TOKEN,
   WRONG_PASSWORD_ERROR,
 } from '../infrastructure/app-constants';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -164,6 +167,49 @@ export class AuthService {
       expires_in: JWT_EXPIRATION_TIME,
       token_type: 'bearer',
       refresh_token: userFromDb.refreshtoken,
+      email: userFromDb.email,
+      role: userProfile.role,
+      userId: userFromDb.id,
+    };
+  }
+
+  async refresh(refreshToken: string) {
+    const decodedEmail = this.jwtService.verify(refreshToken, {
+      secret: JWT_SECRET,
+    }).email;
+    const userFromDb = await this.find(decodedEmail);
+    console.log('userFromDb:', userFromDb);
+    if (!userFromDb) {
+      throw new Error();
+    }
+    if (decodedEmail !== userFromDb.email) {
+      throw new Error();
+    }
+    const roleNames = await this.userRepository.query(
+      GET_ROLE_NAME_BY_ROLE_ID,
+      [userFromDb.roleid],
+    );
+    const userProfile: IUserProfile = {
+      id: userFromDb.id,
+      email: userFromDb.email,
+      role: roleNames[0].getrolenamebyroleid,
+    };
+    const newRefreshToken = await this.jwtService.signAsync(
+      { email: decodedEmail },
+      { expiresIn: JWT_EXPIRATION_TIME_FOR_REFRESH },
+    );
+    await this.userRepository.query(UPDATE_USER_REFRESH_TOKEN, [
+      userFromDb.id,
+      newRefreshToken,
+    ]);
+    const token = await this.jwtService.signAsync(userProfile, {
+      expiresIn: JWT_EXPIRATION_TIME,
+    });
+    return {
+      access_token: token,
+      expires_in: JWT_EXPIRATION_TIME,
+      token_type: 'bearer',
+      refresh_token: newRefreshToken,
       email: userFromDb.email,
       role: userProfile.role,
       userId: userFromDb.id,

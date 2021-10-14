@@ -14,6 +14,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { RefreshToken } from '../infrastructure/interfaces/refresh-token.interface';
 import { AuthService } from '../auth/auth.service';
 import {
   BAD_REQUEST,
@@ -25,6 +26,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { UserDto } from './dto/user.dto';
+import { IJwt } from '../infrastructure/interfaces/jwt.interface';
 
 @Controller('auth')
 export class AuthController {
@@ -83,6 +85,7 @@ export class AuthController {
   }
 
   @Post('forgot-password')
+  @HttpCode(201)
   @UsePipes(new ValidationPipe())
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     try {
@@ -110,6 +113,21 @@ export class AuthController {
       if (!jwtObject) {
         throw new Error();
       }
+      response.cookie('auth', JSON.stringify(jwtObject));
+      return jwtObject;
+    } catch {
+      throw new HttpException(BAD_REQUEST, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Post('refresh')
+  @HttpCode(201)
+  async refresh(
+    @Res({ passthrough: true }) response: Response,
+    @Body() refreshToken: RefreshToken,
+  ): Promise<IJwt> {
+    try {
+      const jwtObject = await this.authService.refresh(refreshToken.token);
       response.cookie('auth', JSON.stringify(jwtObject));
       return jwtObject;
     } catch {
