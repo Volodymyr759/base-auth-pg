@@ -10,19 +10,17 @@ import {
   Post,
   Put,
   Res,
-  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from '../auth/auth.service';
 import {
-  ACCESS_DENIED,
   BAD_REQUEST,
   INTERNAL_SERVER_ERROR,
   NOT_FOUND_ERROR,
-  UNAUTHORIZED,
 } from '../infrastructure/app-constants';
+import { ChangeEmailDto } from './dto/change-email.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserDto } from './dto/user.dto';
 
@@ -50,11 +48,23 @@ export class AuthController {
     try {
       const user = await this.authService.findById(id);
       if (!user) {
-        throw new HttpException(NOT_FOUND_ERROR, HttpStatus.NOT_FOUND);
+        throw new Error();
       }
       return user;
-    } catch (e) {
-      throw new HttpException(e.message, e.HttpStatus);
+    } catch {
+      throw new HttpException(NOT_FOUND_ERROR, HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @Post('change-email')
+  @HttpCode(200)
+  @UsePipes(new ValidationPipe())
+  async changeEmail(@Body() changeEmailDto: ChangeEmailDto) {
+    try {
+      await this.authService.changeEmail(changeEmailDto);
+      return changeEmailDto.newEmail;
+    } catch {
+      throw new HttpException(NOT_FOUND_ERROR, HttpStatus.NOT_FOUND);
     }
   }
 
@@ -65,15 +75,30 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @Body() userDto: CreateUserDto,
   ) {
-    const jwtObject = await this.authService.login(userDto);
-    response.cookie('auth', JSON.stringify(jwtObject));
-    return jwtObject;
+    try {
+      const jwtObject = await this.authService.login(userDto);
+      if (!jwtObject) {
+        throw new Error();
+      }
+      response.cookie('auth', JSON.stringify(jwtObject));
+      return jwtObject;
+    } catch {
+      throw new HttpException(BAD_REQUEST, HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Post('register')
   @HttpCode(201)
   @UsePipes(new ValidationPipe())
   async register(@Body() userDto: CreateUserDto) {
-    return await this.authService.create(userDto);
+    try {
+      const createdUser = await this.authService.create(userDto);
+      if (!createdUser) {
+        throw new Error();
+      }
+      return createdUser;
+    } catch {
+      throw new HttpException(BAD_REQUEST, HttpStatus.BAD_REQUEST);
+    }
   }
 }
