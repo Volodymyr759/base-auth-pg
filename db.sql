@@ -30,7 +30,13 @@ create or replace function getroleidbyrolename(rolename varchar)
         select id from roles where name=rolename
     $body$
     language sql;
-
+create or replace function getrolenamebyroleid(_id integer)
+  returns varchar
+    as
+    $body$
+        select name from roles where id=_id
+    $body$
+    language sql;
 --Procedures
 CREATE PROCEDURE insert_user(
     _email varchar, _passwordhash varchar, _refreshtoken varchar, _roleid integer, 
@@ -52,4 +58,10 @@ CREATE PROCEDURE update_user_passwordhash(
     LANGUAGE SQL 
     AS $$
     update users set passwordhash=_passwordhash where id=_id;
+    $$;
+CREATE PROCEDURE update_user_refreshtoken(
+    _id integer, _refreshtoken varchar) 
+    LANGUAGE SQL 
+    AS $$
+    update users set refreshtoken=_refreshtoken where id=_id;
     $$;
