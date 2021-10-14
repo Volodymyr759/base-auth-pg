@@ -23,6 +23,7 @@ import {
 import { ChangeEmailDto } from './dto/change-email.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { UserDto } from './dto/user.dto';
 
 @Controller('auth')
@@ -76,6 +77,22 @@ export class AuthController {
     try {
       await this.authService.changePassword(changePasswordDto);
       return changePasswordDto.newPassword;
+    } catch {
+      throw new HttpException(BAD_REQUEST, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Post('forgot-password')
+  @UsePipes(new ValidationPipe())
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    try {
+      const createdPassword = await this.authService.forgotPassword(
+        forgotPasswordDto,
+      );
+      if (!createdPassword) {
+        throw new Error();
+      }
+      return createdPassword;
     } catch {
       throw new HttpException(BAD_REQUEST, HttpStatus.BAD_REQUEST);
     }

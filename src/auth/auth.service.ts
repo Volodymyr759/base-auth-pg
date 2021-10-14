@@ -26,6 +26,7 @@ import { UserRepository } from './users.repository';
 import { IUserProfile } from '../infrastructure/interfaces/user-profile.interface';
 import { ChangeEmailDto } from './dto/change-email.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -38,14 +39,14 @@ export class AuthService {
   async changeEmail(changeEmailDto: ChangeEmailDto) {
     const userFromDb = await this.find(changeEmailDto.oldEmail);
     if (!userFromDb) {
-      throw new HttpException(NOT_FOUND_ERROR, HttpStatus.NOT_FOUND);
+      throw new Error();
     }
     const isPasswordCorrect = await compare(
       changeEmailDto.password,
       userFromDb.passwordhash,
     );
     if (!isPasswordCorrect) {
-      throw new HttpException(WRONG_PASSWORD_ERROR, HttpStatus.BAD_REQUEST);
+      throw new Error();
     }
     userFromDb.email = changeEmailDto.newEmail;
     await this.userRepository.query(UPDATE_USER_EMAIL, [
@@ -120,6 +121,20 @@ export class AuthService {
 
   async find(email: string) {
     return await this.userRepository.findOne({ email });
+  }
+
+  async forgotPassword(forgotPassword: ForgotPasswordDto) {
+    const userFromDb = await this.find(forgotPassword.email);
+    if (!userFromDb) {
+      throw new Error();
+    }
+    const newPassword = makeRandomString(6);
+    userFromDb.passwordhash = await hash(newPassword, await genSalt());
+    await this.userRepository.query(UPDATE_USER_PASSWORD_HASH, [
+      userFromDb.id,
+      userFromDb.passwordhash,
+    ]);
+    return newPassword;
   }
 
   async login(userDto: CreateUserDto) {
