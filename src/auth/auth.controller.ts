@@ -60,6 +60,20 @@ export class AuthController {
     }
   }
 
+  @Delete(':id')
+  @HttpCode(200)
+  async deleteById(@Param('id') id: string) {
+    try {
+      const user = await this.authService.delete(id);
+      if (!user) {
+        throw new Error();
+      }
+      return user;
+    } catch {
+      throw new HttpException(NOT_FOUND_ERROR, HttpStatus.NOT_FOUND);
+    }
+  }
+
   @Post('change-email')
   @HttpCode(200)
   @UsePipes(new ValidationPipe())

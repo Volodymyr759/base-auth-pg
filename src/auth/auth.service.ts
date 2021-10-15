@@ -109,6 +109,12 @@ export class AuthService {
     return newUser;
   }
 
+  async delete(id: string) {
+    const userToDelete = await this.findById(id);
+    await this.userRepository.delete(id);
+    return userToDelete;
+  }
+
   async findAll(): Promise<UserDto[]> {
     const usersDto = await this.userRepository.query(GET_All_USERS_DTO);
     return usersDto;
