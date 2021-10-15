@@ -4,8 +4,10 @@ export const GET_ROLE_ID_BY_ROLE_NAME = 'SELECT getroleidbyrolename($1)';
 export const GET_ROLE_NAME_BY_ROLE_ID = 'SELECT getrolenamebyroleid($1)';
 export const CREATE_USER = 'CALL insert_user($1, $2, $3, $4, $5, $6)';
 export const UPDATE_USER_EMAIL = 'CALL update_user_email($1, $2)';
-export const UPDATE_USER_PASSWORD_HASH = 'CALL update_user_passwordhash($1, $2)';
-export const UPDATE_USER_REFRESH_TOKEN = 'CALL update_user_refreshtoken($1, $2)';
+export const UPDATE_USER_PASSWORD_HASH =
+  'CALL update_user_passwordhash($1, $2)';
+export const UPDATE_USER_REFRESH_TOKEN =
+  'CALL update_user_refreshtoken($1, $2)';
 // Errors
 export const ACCESS_DENIED = 'Access denied';
 export const BAD_REQUEST = 'Bad request';
